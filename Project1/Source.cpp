@@ -1,29 +1,29 @@
 #include <iostream>
 #include <fstream> // zapis/odczyt do/z pliku
-#include <string>
+#include <windows.h> // kolorowanie skladni
+#include <string> // dla getline()
 using namespace std;
 
-#define MAX_SIZE 10
+#define MAX_SIZE 20
 
-enum FILL { DOWN, UP }; // wypelniamy na gorze czy na dole  macierz
+enum FILL { DOWN, UP }; // enumerator do okreslenia jak wypelniamy  macierz (gora czy dol zerami)
 
 int choose_matrix_size()
 {
 	int size;
 	cout << "Choose matrix size: ";
-	//cin >> size;
-	size = 4;
+	cin >> size;
 	return size;
 }
 
 bool matrix_up_condition(int row, int column)
 {
-	return row > column;
+	return row < column;
 }
 
 bool matrix_down_condition(int row, int column)
 {
-	return row < column;
+	return row > column;
 }
 
 void fill_matrix(const int * size, float matrix[MAX_SIZE][MAX_SIZE], FILL fill)
@@ -47,20 +47,19 @@ FILL choose_matrix_fill()
 {
 	int wybor;
 	system("cls");
-	cout << "1)       wyplenij zerami pola pod diagonalna" << endl;
-	cout << "other) wypelnij zerami pola nad diagonalna" << endl;
+	cout << "1)     zeros under diagonal" << endl;
+	cout << "other) zeros above diagonal" << endl;
 
 	cin >> wybor;
 	system("cls");
-	//wybor = 1;
 
-	if (wybor == 0) return FILL::DOWN;
+	if (wybor == 1) return FILL::DOWN;
 	else return FILL::UP;
 }
 
 void display_matrix(const int * size, float matrix[MAX_SIZE][MAX_SIZE])
 {
-	cout << endl;
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14); // koloruj na zolty
 	for (size_t r = 0; r < *size; r++)  // row
 	{
 		for (size_t c = 0; c < *size; c++) // column
@@ -69,6 +68,8 @@ void display_matrix(const int * size, float matrix[MAX_SIZE][MAX_SIZE])
 		}
 		cout << endl;
 	}
+	cout << endl;
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);  // koloruj na szary
 }
 
 int choose_matrix_element(const int * size)
@@ -90,10 +91,10 @@ void change_matrix_element(const int * size, float matrix[MAX_SIZE][MAX_SIZE])
 {
 	cout << "Choose element to change" << endl;
 
-	cout << "Select row:";
+	cout << "Select row: ";
 	int row = choose_matrix_element(size);
 
-	cout << "Select column:";
+	cout << "Select column: ";
 	int column = choose_matrix_element(size);
 
 	cout << "Enter new value: ";
@@ -118,21 +119,16 @@ void load_matrix(int * size, float matrix[MAX_SIZE][MAX_SIZE])
 	string line;
 	fstream file;
 
-	 *size = line_counter();
+	*size = line_counter();
 
 	file.open("matrix.txt", ios::in);
 
 	if (file.good() == true)
 	{
 		for (int r = 0; r < *size; r++)
-		{
 			for (int c = 0; c < *size; c++)
-			{
 				file >> matrix[r][c];
-				cout << "[" << matrix[r][c] << "]";
-			}
-			cout << endl;
-		}
+
 		file.close();
 	}
 }
@@ -158,52 +154,50 @@ void save_matrix(const int * size, float matrix[MAX_SIZE][MAX_SIZE])
 	else
 		cout << "File error!" << endl;
 
+	cout << "save successful!" << endl;
+	getchar();
 	file.close();
 }
 
 void create_new_matrix(int * size, float matrix[MAX_SIZE][MAX_SIZE])
 {
 	*size = choose_matrix_size();
-
 	FILL fill = choose_matrix_fill();
 	fill_matrix(size, matrix, fill);
-	display_matrix(size, matrix);
-	change_matrix_element(size, matrix);
-	display_matrix(size, matrix);
-
-	save_matrix(size, matrix);
 }
 
 void main_menu(int * size, float matrix[MAX_SIZE][MAX_SIZE])
 {
 	int choice;
 
-	cout << "1) Create Matrix" << endl;
-	cout << "other) Exit" << endl;
+	display_matrix(size,matrix);
+	cout << "1) Create new Matrix" << endl;
+	cout << "2) Change matrix element" << endl;
+	cout << "3) Load Matrix" << endl;
+	cout << "other) Save and Exit" << endl;
 
 	cin >> choice;
 	system("cls");
+
 	switch (choice)
 	{
 	case 1:
-		create_new_matrix(size,matrix);
+		create_new_matrix(size, matrix);
 		break;
 	case 2:
-		load_matrix(size,matrix);
+		change_matrix_element(size, matrix);
+		break;
+	case 3:
+		load_matrix(size, matrix);
 		break;
 	default:
+	{
+		save_matrix(size, matrix);
 		exit(0);
 	}
+	}
 
-	main_menu(size,matrix);
-}
-
-void matrix_menu()
-{
-	cout << "1) Change matrix element" << endl;
-	cout << "2) Save Matrix" << endl;
-	cout << "2) Load Load" << endl;
-	cout << "2) Exit" << endl;
+	main_menu(size, matrix);
 }
 
 int main()
@@ -212,7 +206,7 @@ int main()
 	int size;
 
 	load_matrix(&size, matrix);
-	main_menu(&size,matrix);
+	main_menu(&size, matrix);
 	getchar();
 	getchar();
 	return 0;
